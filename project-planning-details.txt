@@ -1,0 +1,107 @@
+the goal is to simulate beach volleyball game play
+
+here are the steps in my mind that i have to code to get it to match up to beach volleyball game play:
+1. one side serves
+2. the other receives, sets, and spikes
+3. the original serving team can block the spike. if they do, that's one touch and they'll have to set and spike or return the ball
+3a. if they don't block, then its dig the hit, set, and spike. for reduced complexity right now - lets just assume nobody is blocking 
+
+keep on going until one team fouls or hits out. 
+
+- thoughts: i can add in complexities later like what type of block, what type of hit, what type of serve. I just want to get the basic game structure down and then 
+add in complexities later. 
+
+- to keep the game going. i think i'll do a while loop. 
+- something like while (game is still valid) { do game rules }
+- so how would i code game is still valid? well game is still valid when both sides haven't done anything wrong. that's how it is in volleyball
+- so the condition is something like:
+- game is still valid = team 1 didn't foul the ball && team 2 didn't foul the ball 
+- foul the ball means like didn't hit out, didn't touch more than 3 times, didn't rotate the ball on handset, didn't touch the net. i think for right now, since i'm trying
+to keep this simple, foul is didn't hit out or hit into the net and didn't touch more than 3 times. 
+- so i need a function to check team 1 didn't foul and team 2 didn't foul and it returns true and false 
+- so i'll have a function like: bool didNotFoul(team)
+- so i have the conditions for not fouling: 
+- didn't hit the ball out or didn't touch more than 3 times...both of which will be boolean variables
+- so now i have to write the condition for if they hit the ball out or touched more than 3 times...how can i do that? 
+
+- i think i have the idea, esp since this is a very simplified code to start with:
+- team will be a class...eh lets practice with struct since struct is just like a class but everything is public 
+- since I want to practice to do 3 hits
+
+struct Team {
+    bool didServe();
+    bool didSet();
+    bool didSpike();
+    bool didDig();
+    bool didReceive();
+    bool isFoul(){
+        if (did not )
+    }
+}
+
+wow this is getting complicated...
+
+8/24/2022
+lets just restart from basics:
+the whole goal of the code is to emulate a volleyball game
+so what's the volleyball game? 
+goal of the game is to score a point on the opponent side. so i'm going to have 2 teams
+each team can only touch the ball 3 times
+the loser is the one who commits a fault. 
+
+so let's just say the basics of the game are this:
+the ball touches is like a guessing game. if I guess the write number 3 times, the ball goes to the other team. if I guess wrong before 3 times, then the other team wins
+
+let's just stick to that. 
+
+i think the structure will look like this:
+
+int main(){
+while (team1 didn't fault && team2 didn't fault){
+    team1 will go first and serve (this action will only execute once)
+    if team1 served well, then team2 will receive and set and spike
+    if team2 did not fault, then team1 will dig and set and spike
+    if team1 did not fault, team2 will dig and set and spike
+    and this goes on and on and on until one team faults
+}
+
+if (team1 fault){ return team2 won;}
+if (team2 fault){ return team1 won;}
+return 0;
+}
+
+that's essentially the program in psuedo code 
+
+so we got two main objects: team1 & team2
+for starters, we're just gonna say the way to fail is if you type in the wrong number:
+so the game will go something like this (this is the psuedo code logic inside the while loop):
+team 1:
+to serve, you must type in (random generated number)
+
+team 2:
+to receive the serve, you must type in (random generated number):
+if typed correctly, then you'll display:
+to set the ball, you must type in (random generated number):
+if typed correctly, then you'll display:
+to spike the ball, you must type in (random generated number):
+
+team 1:
+to dig the ball, you must type in (random generated number):
+if typed correctly, then you'll display:
+to set the ball, you must type in (random generated number):
+if typed correctly, then you'll display:
+to spike the ball, you must type in (random generated number):
+
+so on and so forth 
+
+remember if the game fails at all, then we'd break the code and out of the while loop immediately
+
+9/1/2022
+there are different sequences
+if its the first serve, then all team1 has to do is serve. so that can be like action 1 where vector<std::string> action1 = {serve};
+well actually lets use arrays because I know its a defined set length
+std::string action1 [1] = {"serve"};
+std::string action2 [2] = {"receive","set","spike"};
+std::string action3 [3] = {"dig","set","spike"};
+
+i can include each of these actions in didFoul. I think I can also combine didFoul and didTouchCorrectly as two functions together
