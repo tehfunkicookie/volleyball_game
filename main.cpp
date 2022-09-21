@@ -7,8 +7,8 @@
 
 void display_game_rules();
 int generate_guess_number();
-bool didTouchCorrectly(int num);
-bool didTeamFoul(std::string teamName, bool alreadyServed);
+bool didTouchCorrectly(int num, bool isReceivingServe);
+bool didTeamFoul(std::string teamName, bool alreadyServed, int play_counter);
 
 int main()
 {
@@ -19,10 +19,19 @@ int main()
 
     while (didTeam1Foul && didTeam2Foul && counter < 3)
     {
-        didTeam1Foul = didTeamFoul("team 1", false);
+
+        if (counter == 0)
+        {
+            didTeam1Foul = didTeamFoul("team 1", false, counter);
+        }
+        else
+        {
+            didTeam1Foul = didTeamFoul("team 1", true, counter);
+        }
+
         if (didTeam1Foul)
         {
-            didTeam2Foul = didTeamFoul("team 1", true);
+            didTeam2Foul = didTeamFoul("team 2", true, counter);
         }
         counter++;
     }
@@ -65,7 +74,7 @@ int generate_guess_number()
     return rand();
 }
 
-bool didTouchCorrectly(int num)
+bool didTouchCorrectly(int num, bool isReceivingServe)
 {
 
     if (num < 0 || num > 4)
@@ -74,43 +83,113 @@ bool didTouchCorrectly(int num)
         return false;
     }
 
-    std::string actionSequence[5] = {"serve", "receive", "set", "spike", "dig"};
-
-    long int user_input;
-    long int guess_number = generate_guess_number();
-    std::cout << "To " << actionSequence[num] << " the ball, you must type in the number " << guess_number << std::endl;
-
-    std::cin >> user_input;
-
-    if (user_input == guess_number)
+    std::string firstTouch;
+    if (isReceivingServe == true)
     {
-        return true;
+        firstTouch = "receive";
     }
     else
     {
-        return false;
+        firstTouch = "dig";
+    }
+
+    std::string actionSequence[4] = {"serve", firstTouch, "set", "spike"};
+    std::string spikeOption[3] = {"line", "angle", "cut"};
+
+    std::string static myAttack = "none";
+
+    if (num == 3)
+    {
+        std::string userAttack;
+        std::cout << "Which spot do you want to spike toward (line, angle, cut)?: ";
+        std::cin >> myAttack;
+        std::cout << "myAttack is currently: " << myAttack << std::endl;
+    }
+
+    long int user_input;
+
+    // so i have to do different if statements for guessing the number..like if i'm digging a hit, I have to guess both the number and the direction it was hit
+    // if its just receiving, setting, or spiking, then don't guess the direction
+    if (num == 1 && myAttack != "none")
+    {
+        std::cout << "Which direction is the attack going to? (line, angle, cut): ";
+        std::string user_guess;
+        std::cin >> user_guess;
+        std::cout << "User guess is: " << user_guess << " and the attack is: " << myAttack << std::endl;
+
+        if (user_guess != myAttack)
+        {
+            return false;
+        }
+
+        long int guess_number = generate_guess_number();
+        std::cout << "To " << actionSequence[num] << " the ball, you must type in the number " << guess_number << std::endl;
+
+        std::cin >> user_input;
+
+        if (user_input == guess_number)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        long int guess_number = generate_guess_number();
+        std::cout << "To " << actionSequence[num] << " the ball, you must type in the number " << guess_number << std::endl;
+        std::cin >> user_input;
+
+        if (user_input == guess_number)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 
-bool didTeamFoul(std::string teamName, bool alreadyServed)
+bool didTeamFoul(std::string teamName, bool alreadyServed, int play_counter)
 {
-    int i;
-    if (alreadyServed == true)
+    // team 1 always serves. so if alreadyServed == false or team1 is currently serving, then just do this:
+    if (alreadyServed == false)
     {
-        i = 0;
-    }
-    else
-    {
-        i = 1;
+        std::cout << teamName + " has the ball!" << std::endl;
+        return didTouchCorrectly(0, false);
     }
 
-    std::cout << teamName + " has the ball!" << std::endl;
-    for (i; i < 5; i++)
+    if (alreadyServed == true)
     {
-        if (!didTouchCorrectly(i))
+        // if team is receiving a serve, then you'll have to do receive,set,spike
+        // if a team is receiving a spike, it's dig,set,spike
+        // since you only need to receive a serve once, then i need like a one time on off switch or flag
+        if (play_counter == 0 && teamName == "team 2")
         {
-            std::cout << "You lose!" << std::endl;
-            return false;
+            std::cout << teamName + " has the ball!" << std::endl;
+            for (int i = 1; i < 4; i++)
+            {
+                if (!didTouchCorrectly(i, true))
+                {
+                    std::cout << "You lose!" << std::endl;
+                    return false;
+                }
+            }
+        }
+        else
+        { // you are digging the ball
+            std::cout << teamName + " has the ball!" << std::endl;
+            for (int i = 1; i < 4; i++)
+            {
+                if (!didTouchCorrectly(i, false))
+                {
+                    std::cout << "You lose!" << std::endl;
+                    return false;
+                }
+            }
         }
     }
 
