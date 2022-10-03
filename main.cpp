@@ -7,8 +7,8 @@
 
 void display_game_rules();
 int generate_guess_number();
-bool didTouchCorrectly(int num, bool isReceivingServe);
-bool didTeamFoul(std::string teamName, bool alreadyServed, int play_counter);
+bool didTouchCorrectly(int num, bool isReceivingServe, bool &isBlocking);
+bool didTeamFoul(std::string teamName, bool alreadyServed, int &play_counter);
 
 int main()
 {
@@ -27,11 +27,25 @@ int main()
         else
         {
             didTeam1Foul = didTeamFoul("team 1", true, counter);
+            if (didTeam1Foul && counter == -1)
+            {
+                // team1 blocked successfully so the game automatically ends
+                std::cout << "team1 blocked team2 attack successfully" << std::endl;
+                didTeam2Foul = false;
+                break;
+            }
         }
 
         if (didTeam1Foul)
         {
             didTeam2Foul = didTeamFoul("team 2", true, counter);
+            if (didTeam2Foul && counter == -1)
+            {
+                // team2 blocked successfully so the game automatically ends
+                std::cout << "team2 blocked team1 attack successfully" << std::endl;
+                didTeam1Foul = false;
+                break;
+            }
         }
         counter++;
     }
@@ -74,15 +88,16 @@ int generate_guess_number()
     return rand();
 }
 
-bool didTouchCorrectly(int num, bool isReceivingServe)
+bool didTouchCorrectly(int num, bool isReceivingServe, bool &isBlocking)
 {
-
+    // first check if num is a valid input for attack/blocking
     if (num < 0 || num > 4)
     {
         std::cout << "Invalid action for touching the ball." << std::endl;
         return false;
     }
 
+    // set firstTouch to either receive or dig based on whether it's receiving a serve or not
     std::string firstTouch;
     if (isReceivingServe == true)
     {
@@ -93,8 +108,16 @@ bool didTouchCorrectly(int num, bool isReceivingServe)
         firstTouch = "dig";
     }
 
+    // if you are blocking, then that is your first touch
+    if (isBlocking == true)
+    {
+        firstTouch = "block";
+    }
+
+    // all actions
     std::string actionSequence[4] = {"serve", firstTouch, "set", "spike"};
     std::string spikeOption[3] = {"line", "angle", "cut"};
+    std::string blockOption[2] = {"line", "angle"};
 
     std::string static myAttack = "none";
 
@@ -112,6 +135,24 @@ bool didTouchCorrectly(int num, bool isReceivingServe)
     // if its just receiving, setting, or spiking, then don't guess the direction
     if (num == 1 && myAttack != "none")
     {
+        if (isBlocking == true)
+        {
+            std::cout << "Block call? (line or angle): " << std::endl;
+            std::string block_guess;
+            std::cin >> block_guess;
+
+            if (block_guess == myAttack)
+            {
+                return true; // blocked the spike
+            }
+            else
+            {
+                std::cout << "Did not block attack. 3 touches still available. You could still dig the ball." << std::endl;
+                firstTouch = "dig";
+                isBlocking = false;
+                actionSequence[1] = firstTouch;
+            }
+        }
         std::cout << "Which direction is the attack going to? (line, angle, cut): ";
         std::string user_guess;
         std::cin >> user_guess;
@@ -136,6 +177,7 @@ bool didTouchCorrectly(int num, bool isReceivingServe)
             return false;
         }
     }
+
     else
     {
         long int guess_number = generate_guess_number();
@@ -153,13 +195,15 @@ bool didTouchCorrectly(int num, bool isReceivingServe)
     }
 }
 
-bool didTeamFoul(std::string teamName, bool alreadyServed, int play_counter)
+bool didTeamFoul(std::string teamName, bool alreadyServed, int &play_counter)
 {
+    static bool blockStatus;
     // team 1 always serves. so if alreadyServed == false or team1 is currently serving, then just do this:
     if (alreadyServed == false)
     {
+        blockStatus = false;
         std::cout << teamName + " has the ball!" << std::endl;
-        return didTouchCorrectly(0, false);
+        return didTouchCorrectly(0, false, blockStatus);
     }
 
     if (alreadyServed == true)
@@ -167,12 +211,14 @@ bool didTeamFoul(std::string teamName, bool alreadyServed, int play_counter)
         // if team is receiving a serve, then you'll have to do receive,set,spike
         // if a team is receiving a spike, it's dig,set,spike
         // since you only need to receive a serve once, then i need like a one time on off switch or flag
+
         if (play_counter == 0 && teamName == "team 2")
         {
+            blockStatus = false;
             std::cout << teamName + " has the ball!" << std::endl;
             for (int i = 1; i < 4; i++)
             {
-                if (!didTouchCorrectly(i, true))
+                if (!didTouchCorrectly(i, true, blockStatus))
                 {
                     std::cout << "You lose!" << std::endl;
                     return false;
@@ -180,14 +226,43 @@ bool didTeamFoul(std::string teamName, bool alreadyServed, int play_counter)
             }
         }
         else
-        { // you are digging the ball
+        { // you are digging the ball and can block the ball
+            blockStatus = true;
             std::cout << teamName + " has the ball!" << std::endl;
+
+            char c = 'x';
+            while (c != 'Y' && c != 'y' && c != 'N' && c != 'n')
+            {
+
+                std::cout << "Do you want to try and block the ball? (Y/N)" << std::endl;
+                std::cin >> c;
+                if (c == 'Y' || c == 'y')
+                {
+                    blockStatus = true;
+                }
+                else if (c == 'N' || c == 'n')
+                {
+                    blockStatus = false;
+                }
+                else
+                {
+                    std::cout << "you entered in an invalid input. Please try again" << std::endl;
+                }
+            }
+
             for (int i = 1; i < 4; i++)
             {
-                if (!didTouchCorrectly(i, false))
+                bool result = didTouchCorrectly(i, false, blockStatus);
+                if (!result)
                 {
                     std::cout << "You lose!" << std::endl;
                     return false;
+                }
+
+                else if (result && blockStatus == true)
+                {
+                    play_counter = -1;
+                    return true;
                 }
             }
         }

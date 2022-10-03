@@ -105,3 +105,13 @@ std::string action2 [2] = {"receive","set","spike"};
 std::string action3 [3] = {"dig","set","spike"};
 
 i can include each of these actions in didFoul. I think I can also combine didFoul and didTouchCorrectly as two functions together
+
+okay so I just incorporated attack directions and the action order
+now I need to include the blocking; blocking is always the first option before you even dig the ball 
+
+// i guess i have to ask if each team wants to block. 
+// if you want to block, then you have to guess what angle they hitting
+// for right now, you can block everything (so no control block or other team receiving back)
+
+// i might actually need another parameter for "isBlocking" which can change based on player input
+// now i have to say if didTouchCorrectly is true and block called correctly, then end the game immediately 
